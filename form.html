@@ -1,0 +1,849 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="icon" href="8266933.png" type="image/png">
+  <title>Metaverse Login page</title>
+  <meta name="description" content="Production-grade advanced login UI with email/password, Google sign-in button, passkey hint, and strong accessibility." />
+
+  <!-- Google Fonts (distinctive, not system default) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg0:#07070a;
+      --bg1:#0b0c12;
+      --ink:#eef0ff;
+      --muted:#a9afd6;
+      --faint:#7f86b6;
+
+      --glass: rgba(255,255,255,.06);
+      --stroke: rgba(255,255,255,.14);
+      --stroke2: rgba(255,255,255,.20);
+
+      --a0:#76f7ff;
+      --a1:#a88bff;
+      --a2:#ff4fd8;
+      --ok:#48ffa8;
+      --warn:#ffbf66;
+      --bad:#ff5c7a;
+
+      --shadow: 0 28px 90px rgba(0,0,0,.55);
+      --r16:16px;
+      --r20:20px;
+      --r28:28px;
+
+      --max: 1120px;
+      --pad: clamp(18px, 3vw, 34px);
+
+      --h1: clamp(2rem, 2.6vw + 1rem, 3rem);
+      --h2: clamp(1.2rem, 1vw + 1rem, 1.5rem);
+      --p:  clamp(1rem, .25vw + .95rem, 1.1rem);
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: Manrope, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(1000px 720px at 18% 18%, rgba(118,247,255,.12), transparent 62%),
+        radial-gradient(900px 650px at 82% 22%, rgba(168,139,255,.14), transparent 62%),
+        radial-gradient(1000px 700px at 60% 95%, rgba(255,79,216,.10), transparent 62%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+      overflow-x:hidden;
+    }
+    a{ color:inherit; text-decoration:none; }
+    button, input{ font: inherit; }
+
+    /* Ambient scene */
+    .scene{ position:fixed; inset:0; z-index:-1; pointer-events:none; }
+    .noise{
+      position:absolute; inset:0;
+      background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.30'/%3E%3C/svg%3E");
+      mix-blend-mode: overlay;
+      opacity:.06;
+      transform: scale(1.2);
+    }
+    .grid{
+      position:absolute; inset:-12vh -12vw;
+      background:
+        radial-gradient(circle at 50% 35%, rgba(255,255,255,.08), transparent 60%),
+        linear-gradient(rgba(255,255,255,.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px);
+      background-size: auto, 56px 56px, 56px 56px;
+      opacity:.14;
+      transform: perspective(1100px) rotateX(62deg) translateY(26vh);
+      transform-origin: 50% 0%;
+      mask-image: radial-gradient(circle at 50% 20%, black 0 60%, transparent 82%);
+      filter: blur(.2px);
+    }
+    .orbs{ position:absolute; inset:0; filter: blur(14px) saturate(1.15); opacity:.78; }
+    .orb{
+      position:absolute; border-radius:999px; aspect-ratio:1/1;
+      width: min(46vw, 620px);
+      background:
+        radial-gradient(circle at 30% 30%, rgba(118,247,255,.30), transparent 55%),
+        radial-gradient(circle at 70% 60%, rgba(168,139,255,.26), transparent 60%),
+        radial-gradient(circle at 40% 80%, rgba(255,79,216,.20), transparent 62%);
+      mix-blend-mode: screen;
+      opacity:.55;
+      animation: drift 18s ease-in-out infinite;
+    }
+    .orb.o2{
+      width: min(42vw, 560px);
+      background:
+        radial-gradient(circle at 40% 30%, rgba(255,79,216,.28), transparent 55%),
+        radial-gradient(circle at 70% 70%, rgba(118,247,255,.20), transparent 60%),
+        radial-gradient(circle at 30% 70%, rgba(255,191,102,.16), transparent 65%);
+      right:-12vw; top:10vh; left:auto;
+      animation-duration: 22s;
+      opacity:.52;
+    }
+    .orb.o3{
+      width: min(48vw, 700px);
+      left: 18vw; bottom:-22vh; top:auto;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(168,139,255,.26), transparent 55%),
+        radial-gradient(circle at 70% 70%, rgba(118,247,255,.20), transparent 60%),
+        radial-gradient(circle at 50% 80%, rgba(255,191,102,.14), transparent 65%);
+      animation-duration: 26s;
+      opacity:.42;
+    }
+    @keyframes drift{
+      0%,100%{ transform: translate3d(-2vw, -1vh, 0) scale(1); }
+      50%{ transform: translate3d(2.2vw, 2.5vh, 0) scale(1.04); }
+    }
+
+    .wrap{ max-width: var(--max); margin:0 auto; padding: 0 var(--pad); }
+
+    /* Top bar */
+    header{
+      padding: 18px 0 0;
+    }
+    .top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 14px;
+    }
+    .brand{
+      display:flex; align-items:center; gap: 12px;
+    }
+    .mark{
+      width: 38px; height: 38px; border-radius: 12px;
+      background:
+        radial-gradient(circle at 35% 25%, rgba(118,247,255,.75), transparent 60%),
+        radial-gradient(circle at 70% 75%, rgba(255,79,216,.65), transparent 55%),
+        radial-gradient(circle at 65% 35%, rgba(168,139,255,.75), transparent 60%),
+        rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.14);
+      box-shadow: 0 12px 30px rgba(0,0,0,.35);
+      position: relative;
+      overflow:hidden;
+    }
+    .mark::after{
+      content:"";
+      position:absolute; inset:-2px;
+      background: linear-gradient(135deg, transparent 0 40%, rgba(255,255,255,.18) 50%, transparent 60% 100%);
+      transform: translateX(-70%);
+      animation: sheen 4.6s ease-in-out infinite;
+      opacity:.55;
+    }
+    @keyframes sheen{
+      0%,55%{ transform: translateX(-70%); opacity:0; }
+      70%{ opacity:.55; }
+      100%{ transform: translateX(70%); opacity:0; }
+    }
+    .brandTitle{
+      line-height:1.1;
+    }
+    .brandTitle strong{
+      font-family: Sora, sans-serif;
+      font-weight: 800;
+      letter-spacing:.08em;
+      text-transform: uppercase;
+      font-size: .98rem;
+      display:block;
+    }
+    .brandTitle span{
+      display:block;
+      color: rgba(167,173,211,.9);
+      letter-spacing:.06em;
+      text-transform: uppercase;
+      font-size: .78rem;
+      margin-top: 2px;
+    }
+
+    .help{
+      display:flex; align-items:center; gap: 10px;
+      color: rgba(167,173,211,.9);
+      font-size: .95rem;
+      flex-wrap: wrap;
+      justify-content:flex-end;
+    }
+    .help a{
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      transition: background .2s ease, border-color .2s ease;
+    }
+    .help a:hover{ background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.10); }
+
+    /* Layout */
+    main{
+      padding: 24px 0 54px;
+    }
+    .grid2{
+      display:grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap: clamp(16px, 3vw, 34px);
+      align-items: start;
+      margin-top: 16px;
+    }
+
+    /* Left info (no cards; one continuous panel) */
+    .info{
+      border-radius: var(--r28);
+      border: 1px solid rgba(255,255,255,.12);
+      background:
+        radial-gradient(1000px 500px at 20% 20%, rgba(118,247,255,.14), transparent 60%),
+        radial-gradient(900px 460px at 90% 18%, rgba(255,79,216,.12), transparent 60%),
+        linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      position:relative;
+      padding: clamp(18px, 2.5vw, 28px);
+      min-height: 520px;
+    }
+    .info::before{
+      content:"";
+      position:absolute; inset:0;
+      background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.08), rgba(255,255,255,0));
+      transform: translateX(-80%);
+      animation: scan 7.2s ease-in-out infinite;
+      opacity:.30;
+      pointer-events:none;
+    }
+    @keyframes scan{
+      0%,50%{ transform: translateX(-80%); opacity:0; }
+      65%{ opacity:.30; }
+      100%{ transform: translateX(80%); opacity:0; }
+    }
+    h1{
+      font-family: Sora, sans-serif;
+      font-weight: 800;
+      font-size: var(--h1);
+      letter-spacing: -0.02em;
+      line-height: 1.0;
+      margin: 0 0 12px;
+      text-wrap: balance;
+    }
+    .gradText{
+      background: linear-gradient(90deg, rgba(238,240,255,1), rgba(118,247,255,.95) 55%, rgba(255,79,216,.85));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .lead{
+      margin: 0 0 18px;
+      color: rgba(233,236,255,.82);
+      font-size: var(--p);
+      line-height: 1.6;
+      max-width: 60ch;
+    }
+    .bullets{
+      margin-top: 18px;
+      border-top: 1px solid rgba(255,255,255,.10);
+      padding-top: 16px;
+      display:grid;
+      gap: 12px;
+    }
+    .bullet{
+      display:flex; gap: 12px; align-items:flex-start;
+      color: rgba(167,173,211,.92);
+      line-height: 1.5;
+    }
+    .bullet .ic{
+      width: 30px; height: 30px; border-radius: 12px;
+      display:grid; place-items:center;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.04);
+      flex: 0 0 auto;
+      margin-top: 2px;
+    }
+    .bullet svg{ width: 16px; height: 16px; opacity:.95; }
+    .badgeRow{
+      margin-top: 18px;
+      display:flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      color: rgba(167,173,211,.92);
+      font-size: .92rem;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.03);
+    }
+    .pill b{
+      font-family: Sora, sans-serif;
+      font-weight: 700;
+      letter-spacing:.06em;
+      text-transform: uppercase;
+      font-size: .78rem;
+      color: rgba(233,236,255,.88);
+    }
+    .dot{
+      width: 8px; height: 8px; border-radius:999px;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.9), rgba(255,255,255,.2));
+      box-shadow: 0 0 0 6px rgba(118,247,255,.10), 0 0 24px rgba(118,247,255,.14);
+    }
+
+    /* Right auth panel */
+    .auth{
+      border-radius: var(--r28);
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.05);
+      backdrop-filter: blur(14px);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      position:relative;
+    }
+    .authTop{
+      padding: 16px 16px 12px;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.14);
+    }
+    .authTop h2{
+      margin:0;
+      font-family: Sora, sans-serif;
+      font-weight: 800;
+      font-size: var(--h2);
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+    }
+    .authTop p{
+      margin: 8px 0 0;
+      color: rgba(167,173,211,.9);
+      line-height: 1.5;
+    }
+    .authBody{ padding: 16px; display:grid; gap: 12px; }
+
+    .btn{
+      appearance:none;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.05);
+      color: var(--ink);
+      border-radius: 999px;
+      padding: 12px 14px;
+      font-weight: 700;
+      letter-spacing:.01em;
+      cursor:pointer;
+      transition: transform .15s ease, border-color .2s ease, background .2s ease, box-shadow .2s ease, filter .2s ease;
+    }
+    .btn:hover{
+      transform: translateY(-1px);
+      border-color: rgba(118,247,255,.30);
+      background: rgba(118,247,255,.08);
+      box-shadow: 0 22px 70px rgba(118,247,255,.06);
+    }
+    .btn:active{ transform: translateY(0) scale(.98); }
+    .btn:focus-visible{ outline: none; box-shadow: 0 0 0 3px rgba(118,247,255,.18), 0 0 0 1px rgba(255,255,255,.28); }
+
+    .btnPrimary{
+      border-color: rgba(118,247,255,.30);
+      background: linear-gradient(135deg, rgba(118,247,255,.18), rgba(255,79,216,.10));
+    }
+    .btnPrimary:hover{
+      background: linear-gradient(135deg, rgba(118,247,255,.22), rgba(255,79,216,.14));
+      box-shadow: 0 28px 90px rgba(118,247,255,.10), 0 28px 90px rgba(255,79,216,.08);
+    }
+
+    .btnGoogle{
+      display:flex; align-items:center; justify-content:center; gap: 10px;
+      background: rgba(255,255,255,.06);
+      border-color: rgba(255,255,255,.16);
+    }
+    .btnGoogle:hover{
+      background: rgba(255,255,255,.08);
+      border-color: rgba(255,255,255,.22);
+      box-shadow: 0 26px 80px rgba(0,0,0,.25);
+    }
+    .gMark{
+      width: 18px; height: 18px; display:inline-block;
+    }
+
+    .sep{
+      display:flex; align-items:center; gap: 10px;
+      color: rgba(167,173,211,.86);
+      font-size: .92rem;
+      margin: 2px 0;
+    }
+    .sep::before, .sep::after{
+      content:"";
+      height: 1px; flex: 1;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.14), transparent);
+    }
+
+    /* Form */
+    form{ display:grid; gap: 10px; }
+    .field{
+      display:grid;
+      gap: 6px;
+    }
+    label{
+      font-size: .92rem;
+      color: rgba(233,236,255,.86);
+      display:flex;
+      justify-content:space-between;
+      gap: 10px;
+    }
+    label small{
+      color: rgba(167,173,211,.88);
+      font-size: .88rem;
+    }
+
+    .inputWrap{
+      position:relative;
+    }
+    input[type="email"], input[type="password"], input[type="text"]{
+      width:100%;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.22);
+      padding: 12px 44px 12px 12px;
+      color: rgba(238,240,255,.95);
+      outline:none;
+      transition: box-shadow .2s ease, border-color .2s ease, background .2s ease;
+    }
+    input::placeholder{ color: rgba(167,173,211,.60); }
+    input:focus{
+      border-color: rgba(118,247,255,.26);
+      box-shadow: 0 0 0 3px rgba(118,247,255,.16);
+      background: rgba(0,0,0,.28);
+    }
+    .iconToggle{
+      position:absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 36px; height: 36px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+      display:grid; place-items:center;
+      cursor:pointer;
+      transition: transform .15s ease, background .2s ease, border-color .2s ease;
+    }
+    .iconToggle:hover{ transform: translateY(-50%) translateY(-1px); background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.20); }
+    .iconToggle:active{ transform: translateY(-50%) scale(.98); }
+    .iconToggle svg{ width: 18px; height: 18px; opacity:.9; }
+
+    .row{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 2px;
+    }
+    .check{
+      display:flex; align-items:center; gap: 10px;
+      color: rgba(167,173,211,.92);
+      font-size: .95rem;
+      user-select:none;
+    }
+    .check input{
+      width: 18px; height: 18px;
+      accent-color: var(--a0);
+    }
+    .link{
+      color: rgba(118,247,255,.92);
+      text-decoration: none;
+      border-radius: 10px;
+      padding: 6px 8px;
+      transition: background .2s ease;
+      font-weight: 700;
+      letter-spacing:.01em;
+    }
+    .link:hover{ background: rgba(118,247,255,.10); }
+
+    .note{
+      margin-top: 2px;
+      color: rgba(127,134,182,.95);
+      font-size: .92rem;
+      line-height: 1.45;
+    }
+
+    /* Inline validation / toast */
+    .hint{
+      display:flex; gap: 10px; align-items:flex-start;
+      padding: 12px 12px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      color: rgba(167,173,211,.92);
+      line-height: 1.45;
+      font-size: .95rem;
+    }
+    .hint .badge{
+      width: 26px; height: 26px;
+      border-radius: 12px;
+      display:grid; place-items:center;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.18);
+      flex:0 0 auto;
+      margin-top: 1px;
+    }
+    .hint strong{ color: rgba(233,236,255,.9); }
+
+    .toast{
+      position: fixed;
+      left: 50%;
+      bottom: 20px;
+      transform: translateX(-50%) translateY(10px);
+      opacity: 0;
+      pointer-events:none;
+      border-radius: 999px;
+      padding: 10px 12px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.55);
+      backdrop-filter: blur(12px);
+      color: rgba(233,236,255,.92);
+      box-shadow: 0 22px 70px rgba(0,0,0,.45);
+      transition: opacity .18s ease, transform .18s ease;
+      display:flex; align-items:center; gap: 10px;
+      max-width: min(520px, calc(100vw - 24px));
+    }
+    .toast.show{
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    .toast .tDot{
+      width: 10px; height: 10px; border-radius:999px;
+      background: var(--ok);
+      box-shadow: 0 0 0 6px rgba(72,255,168,.12);
+    }
+    .toast.bad .tDot{
+      background: var(--bad);
+      box-shadow: 0 0 0 6px rgba(255,92,122,.12);
+    }
+
+    /* Reveal */
+    .reveal{ opacity:0; transform: translateY(10px); }
+    .reveal.run{ animation: up .8s cubic-bezier(.2,.85,.2,1) forwards; }
+    @keyframes up{ to{ opacity:1; transform: translateY(0); } }
+
+    @media (max-width: 980px){
+      .grid2{ grid-template-columns: 1fr; }
+      .info{ min-height: auto; }
+    }
+    @media (prefers-reduced-motion: reduce){
+      .orb, .mark::after, .info::before{ animation:none !important; }
+      .reveal{ opacity:1 !important; transform:none !important; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="scene" aria-hidden="true">
+    <div class="orbs">
+      <div class="orb o1" style="left:-14vw; top:-18vh;"></div>
+      <div class="orb o2"></div>
+      <div class="orb o3"></div>
+    </div>
+    <div class="grid"></div>
+    <div class="noise"></div>
+  </div>
+
+  <header>
+    <div class="wrap">
+      <div class="top reveal" id="topReveal">
+        <div class="brand" aria-label="Brand">
+          <div class="mark" aria-hidden="true"></div>
+          <div class="brandTitle">
+            <strong>Metaverse</strong>
+            <span>Secure login experience</span>
+          </div>
+        </div>
+        <div class="help">
+          <a href="#security">Security</a>
+          <a href="#support">Support</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="wrap">
+      <div class="grid2">
+        <section class="info reveal" id="infoReveal" aria-label="Product security introduction">
+          <h1>Sign in to your <span class="gradText">secure workspace</span>.</h1>
+          <p class="lead">
+            This is a production-grade login UI template: accessible form patterns, password visibility toggle,
+            inline validation, and a Google sign-in entry point. Hook it to your backend or OAuth provider.
+          </p>
+
+          <div class="badgeRow" aria-label="Highlights">
+            <span class="pill"><span class="dot" aria-hidden="true"></span><b>2FA-ready</b> <span>OTP / app codes</span></span>
+            <span class="pill"><span class="dot" aria-hidden="true" style="box-shadow:0 0 0 6px rgba(168,139,255,.10)"></span><b>Passkeys</b> <span>WebAuthn-friendly</span></span>
+            <span class="pill"><span class="dot" aria-hidden="true" style="box-shadow:0 0 0 6px rgba(255,79,216,.10)"></span><b>SSO</b> <span>OAuth/OIDC</span></span>
+          </div>
+
+          <div class="bullets">
+            <div class="bullet">
+              <div class="ic" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none">
+                  <path d="M12 2l8 4v6c0 5-3.4 9.4-8 10-4.6-.6-8-5-8-10V6l8-4Z" stroke="currentColor" stroke-width="1.6"/>
+                  <path d="M9.2 12.2 11 14l3.8-4.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div><strong style="color:rgba(233,236,255,.9)">Phishing-resistant options.</strong> Support passkeys + SSO to reduce password reuse risk.</div>
+            </div>
+
+            <div class="bullet" id="security">
+              <div class="ic" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none">
+                  <path d="M7 11V8a5 5 0 0 1 10 0v3" stroke="currentColor" stroke-width="1.7"/>
+                  <path d="M7 11h10v9H7v-9Z" stroke="currentColor" stroke-width="1.7"/>
+                  <path d="M12 14v3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div><strong style="color:rgba(233,236,255,.9)">Client-side checks.</strong> Helpful validation without exposing security logic—server still verifies.</div>
+            </div>
+
+            <div class="bullet" id="support">
+              <div class="ic" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none">
+                  <path d="M4 12a8 8 0 0 1 16 0v4a2 2 0 0 1-2 2h-2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                  <path d="M6 12v3a2 2 0 0 0 2 2h2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                  <path d="M10 18h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div><strong style="color:rgba(233,236,255,.9)">Support-friendly UI.</strong> Clear error messages, caps-lock detection, and a smooth recovery flow.</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="auth reveal" id="authReveal" aria-label="Authentication panel">
+          <div class="authTop">
+            <h2>Welcome back</h2>
+            <p>Sign in with Google or use your email. (This is our Login Page.)</p>
+          </div>
+
+          <div class="authBody">
+            <a class="btn btnGoogle" id="googleBtn" type="button" aria-label="Continue with Google" href="hello.html" onclick="prompt('Write Your Email Id here')">
+              <!-- Google G (inline SVG) -->
+              <svg class="gMark" viewBox="0 0 48 48" aria-hidden="true">
+                <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.8 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.2 6.1 29.4 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.1-.1-2.2-.4-3.5z"/>
+                <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.2 6.1 29.4 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"/>
+                <path fill="#4CAF50" d="M24 44c5.2 0 10-2 13.5-5.2l-6.2-5.2C29.3 36 26.8 37 24 37c-5.3 0-9.8-3.4-11.4-8.1l-6.6 5.1C9.3 39.7 16.1 44 24 44z"/>
+                <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.4 4.3-4.5 5.6l.0.0 6.2 5.2C36.6 39 44 34 44 24c0-1.1-.1-2.2-.4-3.5z"/>
+              </svg>
+              Continue with Google
+            </a>
+
+            <div class="sep" aria-hidden="true">or</div>
+
+            <form id="loginForm" novalidate>
+              <div class="field">
+                <label for="email">
+                  Email
+                  <small id="emailHint">Use your work email</small>
+                </label>
+                <div class="inputWrap">
+                  <input id="email" name="email" type="email" inputmode="email" autocomplete="email"
+                         placeholder="name@company.com" required aria-describedby="emailHint" />
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="password">
+                  Password
+                  <a class="link" href="#" id="forgotLink">Forgot?</a>
+                </label>
+                <div class="inputWrap">
+                  <input id="password" name="password" type="password" autocomplete="current-password"
+                         placeholder="Enter your password" required minlength="8" />
+                  <button class="iconToggle" type="button" id="togglePw" aria-label="Show password" aria-pressed="false">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path d="M4 12c3.5-6.5 12.5-6.5 16 0-3.5 6.5-12.5 6.5-16 0Z" stroke="currentColor" stroke-width="1.7"/>
+                      <path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z" stroke="currentColor" stroke-width="1.7"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <div class="row">
+                <label class="check">
+                  <input id="remember" type="checkbox" />
+                  Remember this device
+                </label>
+                <a class="link" href="#" id="passkeyLink">Use passkey</a>
+              </div>
+
+              <a class="btn btnPrimary" type="submit" id="signInBtn" href="hello.html" onclick="alert('Loading Website')">Sign in</a>
+
+              <div class="hint" role="note" aria-label="Security note">
+                <div class="badge" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <path d="M12 22c5.5 0 10-4.5 10-10S17.5 2 12 2 2 6.5 2 12s4.5 10 10 10Z" stroke="currentColor" stroke-width="1.6"/>
+                    <path d="M12 7.3v5.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M12 16.8h.01" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+                  </svg>
+                </div>
+                <div>
+                  <strong>Demo behavior:</strong> This page shows UI/UX and validation only.
+                  To make “real” Google login, connect OAuth (Google Identity Services) on your backend or Firebase/Auth0.
+                </div>
+              </div>
+
+              <p class="note">
+                Don’t have an account?
+                <a class="link" href="#" id="createLink">Create one</a>
+              </p>
+            </form>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true">
+    <span class="tDot" aria-hidden="true"></span>
+    <span id="toastText">Toast</span>
+  </div>
+
+  <script>
+    // Reveal on load
+    const revealIds = ["topReveal","infoReveal","authReveal"];
+    revealIds.forEach((id, i)=>{
+      const el = document.getElementById(id);
+      if(!el) return;
+      el.classList.add('run');
+      el.style.animationDelay = (0.05 + i * 0.12) + 's';
+    });
+
+    // Toast helper
+    const toast = document.getElementById('toast');
+    const toastText = document.getElementById('toastText');
+    let toastTimer = null;
+    function showToast(msg, type="ok"){
+      toastText.textContent = msg;
+      toast.classList.toggle('bad', type === "bad");
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(()=> toast.classList.remove('show'), 2400);
+    }
+
+    // Password show/hide
+    const togglePw = document.getElementById('togglePw');
+    const password = document.getElementById('password');
+    togglePw.addEventListener('click', ()=>{
+      const isHidden = password.type === 'password';
+      password.type = isHidden ? 'text' : 'password';
+      togglePw.setAttribute('aria-pressed', String(isHidden));
+      togglePw.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+    });
+
+    // Caps Lock detection
+    password.addEventListener('keyup', (e)=>{
+      if(e.getModifierState && e.getModifierState('CapsLock')){
+        showToast('Caps Lock is on', 'bad');
+      }
+    });
+
+    // Demo: Google sign-in button action
+    // Real implementation requires OAuth / Google Identity Services (GIS) or Firebase/Auth0, etc.
+    const googleBtn = document.getElementById('googleBtn');
+    googleBtn.addEventListener('click', ()=>{
+      showToast('Google sign-in clicked (connect OAuth to make it real).');
+    });
+
+    // Passkey link (WebAuthn hint)
+    const passkeyLink = document.getElementById('passkeyLink');
+    passkeyLink.addEventListener('click', async (e)=>{
+      e.preventDefault();
+      // Demo only. Real passkeys require server-generated challenge + WebAuthn ceremony.
+      showToast('Passkey flow (WebAuthn) requires server integration.', 'bad');
+    });
+
+    // Forgot password / Create account (demo)
+    document.getElementById('forgotLink').addEventListener('click', (e)=>{
+      e.preventDefault();
+      showToast('Password reset flow would start here.');
+    });
+    document.getElementById('createLink').addEventListener('click', (e)=>{
+      e.preventDefault();
+      showToast('Account creation flow would start here.');
+    });
+
+    // Client-side validation + demo submit
+    const form = document.getElementById('loginForm');
+    const email = document.getElementById('email');
+    const signInBtn = document.getElementById('signInBtn');
+
+    function isValidEmail(v){
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
+    }
+
+    function setInvalid(input, message){
+      input.setAttribute('aria-invalid', 'true');
+      input.style.borderColor = 'rgba(255,92,122,.55)';
+      input.style.boxShadow = '0 0 0 3px rgba(255,92,122,.14)';
+      showToast(message, 'bad');
+    }
+
+    function clearInvalid(input){
+      input.removeAttribute('aria-invalid');
+      input.style.borderColor = '';
+      input.style.boxShadow = '';
+    }
+
+    email.addEventListener('input', ()=> clearInvalid(email));
+    password.addEventListener('input', ()=> clearInvalid(password));
+
+    form.addEventListener('submit', (e)=>{
+      e.preventDefault();
+
+      const eVal = email.value.trim();
+      const pVal = password.value;
+
+      let ok = true;
+      if(!isValidEmail(eVal)){
+        setInvalid(email, 'Please enter a valid email address.');
+        ok = false;
+      }
+      if(pVal.length < 8){
+        setInvalid(password, 'Password must be at least 8 characters.');
+        ok = false;
+      }
+      if(!ok) return;
+
+      // Demo "sign in" state
+      const old = signInBtn.textContent;
+      signInBtn.disabled = true;
+      signInBtn.textContent = 'Signing in…';
+      signInBtn.style.filter = 'saturate(.8)';
+
+      setTimeout(()=>{
+        signInBtn.disabled = false;
+        signInBtn.textContent = old;
+        signInBtn.style.filter = '';
+        showToast('Signed in (UI demo). Connect backend to authenticate for real.');
+      }, 850);
+    });
+
+    // Optional: Enter key should submit naturally (already handled by form)
+  </script>
+</body>
+</html>
